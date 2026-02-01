@@ -7,6 +7,16 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class SuccessResource extends JsonResource
 {
+    protected $code , $message;
+
+    public function __construct(int $code, $message)
+    {
+        JsonResource::withoutWrapping();
+
+        $this->code = $code;
+        $this->message = $message;
+    }
+
     /**
      * Transform the resource into an array.
      *
@@ -14,6 +24,13 @@ class SuccessResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            'message' => $this->message
+        ];
+    }
+
+    public function withResponse($request,$response)
+    {
+        $response->setStatusCode($this->code);
     }
 }

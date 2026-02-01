@@ -8,4 +8,17 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class UserAddress extends Model
 {
     use SoftDeletes;
+
+    protected $fillable = [
+        'name',
+        'city',
+        'full_address',
+        'is_default',
+    ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
 }
