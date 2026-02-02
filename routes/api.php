@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderProductController;
+use App\Http\Controllers\PaymentOrderController;
 use App\Http\Controllers\UserAddressController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -22,9 +23,11 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::resource('orders',OrderController ::class);
+    Route::resource('orders',OrderController ::class)->only(['index','store','show','destroy']);
     Route::get('cancel-order/{orderId}',[OrderController ::class,'cancelOrder']);
-    Route::resource('order-products',OrderProductController ::class);
-    Route::resource('payments',OrderProductController ::class);
+    Route::resource('order-products',OrderProductController ::class)->only(['store','update','destroy']);
+    Route::get('payment-methods',[PaymentOrderController ::class, 'paymentMethods']);
+    Route::post('pay-order',[PaymentOrderController ::class, 'payOrder']);
+    Route::get('order-payment-transactions/{id}',[PaymentOrderController ::class, 'orderPaymentTransaction']);
 });
 

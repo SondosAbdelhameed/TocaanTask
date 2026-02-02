@@ -13,6 +13,7 @@ class UserAddress extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'user_id',
         'name',
         'city',
         'full_address',

@@ -4,6 +4,7 @@ namespace App\Services\Order;
 
 use App\Enums\OrderStatusEnum;
 use App\Models\Order;
+use App\Models\OrderPaymentTransaction;
 use App\Models\OrderProduct;
 use App\Models\Product;
 
@@ -74,5 +75,15 @@ class OrderService
         $order->subtotal = $subtotal;
         $order->total = $subtotal;
         $order->save();
+    }
+
+    public function savePaymentTransaction($order, $paymentMethodId, $transactionId, $status) {
+        $transaction = new OrderPaymentTransaction();
+        $transaction->order_id = $order->id;
+        $transaction->payment_method_id = $paymentMethodId;
+        $transaction->amount = $order->total;
+        $transaction->status = $status;
+        $transaction->transaction_id = $transactionId;
+        $transaction->save();   
     }
 }

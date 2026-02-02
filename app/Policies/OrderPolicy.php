@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Enums\OrderStatusEnum;
 use App\Models\Order;
+use App\Models\OrderPaymentTransaction;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
@@ -23,6 +24,21 @@ class OrderPolicy
     public function view(User $user, Order $order): bool
     {
         return $user->id === $order->user_id;
+    }
+
+     /**
+     * Determine whether the user can pay the model.
+     */
+    public function pay(User $user, Order $order): Response
+    {
+        if(!($user->id === $order->user_id)){
+            return Response::deny('You do not own this address.');
+        }
+        $successTransaction = OrderPaymentTransaction::where('order_id',$order->id)->where('status','success')->first();
+        if($successTransaction){
+            return Response::deny('This order has already been paid.');
+        }
+        return Response::allow() ;
     }
 
     /**

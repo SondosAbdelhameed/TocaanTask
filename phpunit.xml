@@ -24,7 +24,7 @@
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
         <env name="DB_CONNECTION" value="mysql"/> //change to your preferred database connection for testing
-        <env name="DB_DATABASE" value="tocaan_task_test"/> //change to your test database name
+        <env name="DB_DATABASE" value="tocaan_task"/> //change to your test database name
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

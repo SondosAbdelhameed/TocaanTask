@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('order_id')->constrained('orders');
             $table->string('transaction_id')->unique();
             $table->decimal('amount', 10, 2);
+            $table->string('status', 50);
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent();
         });

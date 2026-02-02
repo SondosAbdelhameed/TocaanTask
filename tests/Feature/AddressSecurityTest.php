@@ -23,13 +23,14 @@ class AddressSecurityTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)
-                        ->putJson("/api/addresses/{$address->id}", [
+                        ->putJson("/api/auth/addresses/{$address->id}", [
                             'city' => 'New Secure City',
-                            'line1' => '123 Updated St'
+                            'name' => 'Home',
+                            'full_address' => '123 Main St'
                         ]);
 
         $response->assertStatus(200);
-        $this->assertDatabaseHas('addresses', [
+        $this->assertDatabaseHas('user_addresses', [
             'id' => $address->id,
             'city' => 'New Secure City'
         ]);
@@ -40,21 +41,25 @@ class AddressSecurityTest extends TestCase
     {
         $owner = User::factory()->create();
         $hacker = User::factory()->create();
-        $address = UserAddress::factory()->create([
+        $address = UserAddress::create([
             'user_id' => $owner->id,
-            'city' => 'Original City'
+            'city' => 'Original City',
+            'name' => 'Home',
+            'full_address' => '123 Main St'
         ]);
 
         $response = $this->actingAs($hacker)
-                        ->putJson("/api/addresses/{$address->id}", [
-                            'city' => 'Hacked City'
+                        ->putJson("/api/auth/addresses/{$address->id}", [
+                            'city' => 'Hacked City',
+                            'name' => 'Home',
+                            'full_address' => '123 Main St'
                         ]);
 
         // Assert Forbidden
         $response->assertStatus(403);
         
         // Double check the database was NOT changed
-        $this->assertDatabaseHas('addresses', [
+        $this->assertDatabaseHas('user_addresses', [
             'id' => $address->id,
             'city' => 'Original City'
         ]);
@@ -65,15 +70,20 @@ class AddressSecurityTest extends TestCase
     {
         // 1. Create a user and an address belonging to them
         $user = User::factory()->create();
-        $address = UserAddress::factory()->create(['user_id' => $user->id]);
+        $address = UserAddress::create([
+            'user_id' => $user->id,
+            'city' => 'Original City',
+            'name' => 'Home',
+            'full_address' => '123 Main St'
+            ]);
 
         // 2. Act as that user and attempt to delete
         $response = $this->actingAs($user)
-                         ->deleteJson("/api/addresses/{$address->id}");
+                         ->deleteJson("/api/auth/addresses/{$address->id}");
 
         // 3. Assert success
-        $response->assertStatus(204);
-        $this->assertDatabaseMissing('addresses', ['id' => $address->id]);
+        $response->assertStatus(200);
+        $this->assertDatabaseMissing('user_addresses', ['id' => $address->id]);
     }
 
     #[Test]
@@ -84,14 +94,19 @@ class AddressSecurityTest extends TestCase
         $hacker = User::factory()->create();
         
         // 2. Create an address for the owner
-        $address = UserAddress::factory()->create(['user_id' => $owner->id]);
+        $address = UserAddress::create([
+            'user_id' => $owner->id,
+            'city' => 'Original City',
+            'name' => 'Home',
+            'full_address' => '123 Main St'
+        ]);
 
         // 3. Act as the hacker and try to delete the owner's address
         $response = $this->actingAs($hacker)
-                         ->deleteJson("/api/addresses/{$address->id}");
+                         ->deleteJson("/api/auth/addresses/{$address->id}");
 
         // 4. Assert that access is forbidden
         $response->assertStatus(403);
-        $this->assertDatabaseHas('addresses', ['id' => $address->id]);
+        $this->assertDatabaseHas('user_addresses', ['id' => $address->id]);
     }
 }
