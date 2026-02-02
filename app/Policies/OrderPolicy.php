@@ -28,33 +28,58 @@ class OrderPolicy
     /**
      * Determine whether the user can create models.
      */
-    public function create(User $user): bool
+    public function create(User $user): Response
     {
-        return false;
+        $existingOrder = Order::where('user_id',$user->id)->where('status',OrderStatusEnum::PENDING->value)->first();
+        if($existingOrder){
+            return Response::deny('You have a pending order. Please complete or cancel it before creating a new one.');
+        }
+        return Response::allow();
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Order $order): bool
+    public function update(User $user, Order $order): Response
     {
-        return $user->id === $order->user_id && $order->payments()->count() == 0;
+        if(!($user->id === $order->user_id)){
+            return Response::deny('You do not own this address.');
+        }
+
+        if(!($order->payments()->count() == 0)){
+            return Response::deny('Only pending orders can be updated.');
+        }
+        return Response::allow() ;
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Order $order): bool
+    public function delete(User $user, Order $order): Response
     {
-        return $user->id === $order->user_id && $order->payments()->count() == 0;
+        if(!($user->id === $order->user_id)){
+            return Response::deny('You do not own this address.');
+        }
+
+        if($order->payments()->count() > 0 || $order->status != OrderStatusEnum::PENDING->value){
+            return Response::deny('Only pending orders can be deleted.');
+        }
+        return Response::allow() ;
     }
 
     /**
      * Determine whether the user can cancel the model.
      */
-    public function cancel(User $user, Order $order): bool
+    public function cancel(User $user, Order $order): Response
     {
-        return $user->id === $order->user_id && $order->status == OrderStatusEnum::CONFIRMED->value;
+        if(!($user->id === $order->user_id)){
+            return Response::deny('You do not own this address.');
+        }
+
+        if($order->status != OrderStatusEnum::CONFIRMED->value){
+            return Response::deny('Only confirmed orders can be cancelled.');
+        }
+        return Response::allow() ;
     }
 
     /**

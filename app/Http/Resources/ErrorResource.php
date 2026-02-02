@@ -10,12 +10,12 @@ class ErrorResource extends JsonResource
 {
     protected $code , $message, $errors;
 
-    public function __construct(int $code, $message = "Issue reported, please try again later", $errors = null)
+    public function __construct(int $code, $message , $errors = null)
     {
         JsonResource::withoutWrapping();
 
         $this->code = $code;
-        $this->message = $message;
+        $this->message = $message == null ? "Issue reported, please try again later" : $message;
         $this->errors = $errors;
     }
 

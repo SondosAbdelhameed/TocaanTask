@@ -13,7 +13,7 @@ class OrderService
         $order = new Order();
         $order->user_id = $request->user()->id;
         $order->subtotal = 0;
-        $order->tax = $request->tax;
+        $order->tax = 0;
         $order->discount = 0;
         $order->shipping = 0;
         $order->total = 0;
@@ -22,7 +22,7 @@ class OrderService
 
         $subtotal = 0;
         foreach ($request->products as $product) {
-            $subtotal += $this->addOrderProduct($product->product_id, $product->quantity, $order->id);
+            $subtotal += $this->addOrderProduct($product['id'], $product['quantity'], $order->id);
         }
 
         $order->subtotal = $subtotal;

@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Order\StoreOrderProductRequest ;
+use App\Http\Requests\Order\UpdateOrderProductRequest;
 use App\Http\Resources\ErrorResource;
-use App\Http\Resources\Order\OrderDetailResource;
 use App\Http\Resources\SuccessResource;
 use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Services\Order\OrderService;
-use Error;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
@@ -18,12 +18,9 @@ class OrderProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index($orderId, Request $request)
     {
-        $order = Order::findOrFail($request->order_id);
-        $orderProducts = OrderProduct::where('order_id', $request->order_id)->paginate();
-        Gate::authorize('view', $order);   
-        return OrderDetailResource::collection($orderProducts);
+        //
     }
 
     /**
@@ -37,12 +34,13 @@ class OrderProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreOrderProductRequest $request)
     {
         $order = Order::findOrFail($request->order_id);
         Gate::authorize('update', $order);
         $service = new OrderService();
-        $service->addOrderProduct($request->product_id, $request->quantity, $request->order_id);
+        $subtotal = $service->addOrderProduct($request->product_id, $request->quantity, $request->order_id);
+        $service->calculateOrderTotal($request->order_id);
         return new SuccessResource(Response::HTTP_OK,"Product added to order successfully.");
     }
 
@@ -65,7 +63,7 @@ class OrderProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateOrderProductRequest $request, string $id)
     {
         $orderProduct = OrderProduct::findOrFail($id);
         $order = Order::findOrFail($orderProduct->order_id);
@@ -83,9 +81,9 @@ class OrderProductController extends Controller
     {
 
         $orderProduct = OrderProduct::findOrFail($id);
-        $order = Order::with('details')->findOrFail($orderProduct->order_id);
+        $order = Order::with('orderProducts')->findOrFail($orderProduct->order_id);
         Gate::authorize('update', $order);
-        if ($order->details->count() == 0) {
+        if ($order->orderProducts->count() == 1) {
             return new ErrorResource(Response::HTTP_BAD_REQUEST,"Cannot delete the last product from order.");
         }
         $service = new OrderService();

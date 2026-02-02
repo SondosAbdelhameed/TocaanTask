@@ -8,9 +8,11 @@ use App\Http\Resources\Order\OrderResource;
 use App\Http\Resources\SuccessResource;
 use App\Models\Order;
 use App\Models\OrderProduct;
+use App\Models\User;
 use App\Services\Order\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
 class OrderController extends Controller
@@ -20,7 +22,7 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        $orders = Order::filter($request)->where('user_id', $request->user()->id)->paginate();
+        $orders = Order::filter($request)->with('orderProducts')->where('user_id', $request->user()->id)->paginate();
         return OrderResource::collection($orders);
     }
 
@@ -37,9 +39,15 @@ class OrderController extends Controller
      */
     public function store(OrderRequest $request)
     {
-        $service = new OrderService();
-        $service->saveOrder($request);
-        return new SuccessResource(Response::HTTP_OK,"Order created successfully.");
+        Gate::authorize('create',Order::class);
+
+        try{
+            $service = new OrderService();
+            $service->saveOrder($request);
+            return new SuccessResource(Response::HTTP_OK,"Order created successfully.");
+        } catch (\Exception $ex) {
+            return new ErrorResource(Response::HTTP_BAD_REQUEST,null,$ex->getTrace());
+        }
     }
 
     /**
@@ -47,7 +55,7 @@ class OrderController extends Controller
      */
     public function show(string $id)
     {
-        $order = Order::with('details')->findOrFail($id);
+        $order = Order::with('orderProducts')->findOrFail($id);
         return new OrderResource($order);
     }
 
@@ -69,14 +77,29 @@ class OrderController extends Controller
         */
     }
 
+    public function cancelOrder($orderId)
+    {
+
+        $order = Order::findOrFail($orderId);
+        Gate::authorize('cancel', $order);
+        try {
+            $order->status = 'cancelled';
+            $order->cancelled_at = now();
+            $order->save();
+            return new SuccessResource(Response::HTTP_OK,"Order cancelled successfully.");
+        } catch (\Exception $ex) {
+            return new ErrorResource(Response::HTTP_BAD_REQUEST,null,$ex->getTrace());
+        }
+    }
+
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
     {
+        $order = Order::findOrFail($id);
+        Gate::authorize('delete', $order);
         try {
-            $order = Order::findOrFail($id);
-            Gate::authorize('delete', $order);
             OrderProduct::where('order_id', $id)->delete();
             $order->delete();
             return new SuccessResource(Response::HTTP_OK,"Order deleted successfully.");

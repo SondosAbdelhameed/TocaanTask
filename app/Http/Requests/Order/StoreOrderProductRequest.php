@@ -4,7 +4,7 @@ namespace App\Http\Requests\Order;
 
 use App\Http\Requests\JsonRequest;
 
-class OrderRequest extends JsonRequest
+class StoreOrderProductRequest extends JsonRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,9 +22,9 @@ class OrderRequest extends JsonRequest
     public function rules(): array
     {
         return [
-            'products' => ['required', 'array', 'min:1'],
-            'products.*.id' => ['required', 'exists:products,id'],
-            'products.*.quantity' => ['required', 'integer', 'min:1'],
+            'order_id' => ['required', 'exists:orders,id'],
+            'product_id' => ['required', 'exists:products,id'],
+            'quantity' => ['required', 'integer', 'min:1'],
         ];
     }
 }

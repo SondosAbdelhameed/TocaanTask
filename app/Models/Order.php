@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use App\Policies\OrderPolicy;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Model;
 
+#[UsePolicy(OrderPolicy::class)]
 class Order extends Model
 {
     protected $fillable = [
@@ -26,7 +29,7 @@ class Order extends Model
         return $query;
     }
 
-    public function details() {
+    public function orderProducts() {
         return $this->hasMany(OrderProduct::class);
     }
 
